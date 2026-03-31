@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Facture</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      background: #eee;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <h2>Inscription</h2>
+  <form id="registerForm">
+    <input type="email" placeholder="Email" name="email" required />
+    <input type="password" placeholder="Mot de passe" name="password" required />
+    <button>S'inscrire</button>
+  </form>
+
+  <h2>Connexion</h2>
+  <form id="loginForm">
+    <input type="email" placeholder="Email" name="email" required />
+    <input type="password" placeholder="Mot de passe" name="password" required />
+    <button>Se connecter</button>
+  </form>
+
+  <div id="app" class="hidden">
+    <h2>Créer une facture</h2>
+    <form id="invoiceForm">
+      <input type="number" name="montant" placeholder="Montant" required />
+      <button>Créer</button>
+    </form>
+
+    <h2>Mes factures</h2>
+    <button id="loadInvoices">Voir mes factures</button>
+    <ul id="invoiceList"></ul>
+
+    <button id="logout">Se déconnecter</button>
+  </div>
+
+  <div class="message" id="message"></div>
+</div>
+
+<script>
+const message = document.getElementById('message');
+const appDiv = document.getElementById('app');
+
+function showMessage(text) {
+  message.textContent = text;
+}
+
+// REGISTER
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(registerForm);
+
+  const res = await fetch('/register', {
+    method: 'POST',
+    body: formData
+  });
+
+  const text = await res.text();
+  showMessage(text);
+});
+
+// LOGIN
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(loginForm);
+
+  const res = await fetch('/login', {
+    method: 'POST',
+    body: formData
+  });
+
+  const text = await res.text();
+  showMessage(text);
+
+  if (text.includes('Connecté')) {
+    appDiv.classList.remove('hidden');
+  }
+});
+
+// CREATE INVOICE
+invoiceForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(invoiceForm);
+
+  const res = await fetch('/invoice', {
+    method: 'POST',
+    body: formData
+  });
+
+  const text = await res.text();
+  showMessage(text);
+});
+
+// LOAD INVOICES
+loadInvoices.addEventListener('click', async () => {
+  const res = await fetch('/my-invoices');
+  const data = await res.json();
+
+  invoiceList.innerHTML = '';
+
+  data.forEach(inv => {
+    const li = document.createElement('li');
+    li.textContent = `Facture #${inv.id} - ${inv.montant}€`;
+    invoiceList.appendChild(li);
+  });
+});
+
+// LOGOUT
+logout.addEventListener('click', async () => {
+  await fetch('/logout');
+  appDiv.classList.add('hidden');
+  showMessage('Déconnecté');
+});
+</script>
+
+</body>
+</html>
