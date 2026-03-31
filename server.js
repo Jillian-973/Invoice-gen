@@ -119,11 +119,12 @@ const initDirectories = async () => {
     }
   }
 };
-
+/*
 // Route principale - Afficher le formulaire
 app.get('/', (req, res) => {
   res.render('index');
-});
+});*/
+
 // Initialiser les dossiers et démarrer le serveur
 initDirectories().then(() => {
   app.listen(PORT, () => {
