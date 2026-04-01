@@ -3,204 +3,1409 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>App Facture</title>
+    <title>Factura</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #f4f6f9;
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
         margin: 0;
-        padding: 20px;
+        padding: 0;
       }
 
-      .container {
-        max-width: 500px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      :root {
+        --cream: #f5f0e8;
+        --ink: #1a1714;
+        --ink-soft: #4a4540;
+        --gold: #c9a84c;
+        --gold-light: #e8d5a3;
+        --rust: #b85c38;
+        --paper: #faf7f2;
+        --border: rgba(26, 23, 20, 0.12);
+        --shadow: 0 4px 40px rgba(26, 23, 20, 0.08);
       }
 
-      h2 {
-        text-align: center;
+      html {
+        scroll-behavior: smooth;
       }
 
-      input,
-      button {
-        width: 100%;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 5px;
-        border: 1px solid #ccc;
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
       }
 
-      button {
-        background: #4caf50;
-        color: white;
+      /* ── HEADER ── */
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 48px;
+        height: 72px;
+        background: rgba(245, 240, 232, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .logo {
+        font-family: "Playfair Display", serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .logo span {
+        color: var(--gold);
+        font-style: italic;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+      }
+      nav a {
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: var(--ink-soft);
+        text-decoration: none;
+        letter-spacing: 0.02em;
+        transition: color 0.2s;
+      }
+      nav a:hover {
+        color: var(--ink);
+      }
+
+      .user-btn {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ink);
+        color: var(--cream);
         border: none;
+        border-radius: 100px;
+        padding: 10px 20px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.15s;
+      }
+      .user-btn:hover {
+        background: var(--ink-soft);
+        transform: translateY(-1px);
+      }
+
+      .user-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--gold);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      .dropdown {
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        min-width: 200px;
+        overflow: hidden;
+        display: none;
+        animation: fadeDown 0.2s ease;
+      }
+      .dropdown.open {
+        display: block;
+      }
+
+      @keyframes fadeDown {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 20px;
+        font-size: 0.875rem;
+        color: var(--ink);
+        cursor: pointer;
+        transition: background 0.15s;
+        border: none;
+        background: none;
+        width: 100%;
+        font-family: "DM Sans", sans-serif;
+        text-align: left;
+      }
+      .dropdown-item:hover {
+        background: var(--cream);
+      }
+      .dropdown-item.danger {
+        color: var(--rust);
+      }
+      .dropdown-divider {
+        height: 1px;
+        background: var(--border);
+        margin: 4px 0;
+      }
+
+      /* ── HERO ── */
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 120px 48px 80px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: -20%;
+        right: -10%;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          var(--gold-light) 0%,
+          transparent 70%
+        );
+        opacity: 0.4;
+      }
+      .hero::after {
+        content: "";
+        position: absolute;
+        bottom: 10%;
+        left: -5%;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #d4c5b0 0%, transparent 70%);
+        opacity: 0.3;
+      }
+
+      .hero-content {
+        max-width: 760px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+        animation: heroIn 0.8s ease both;
+      }
+
+      @keyframes heroIn {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 100px;
+        padding: 6px 16px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--ink-soft);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 32px;
+      }
+      .hero-eyebrow::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+
+      .hero h1 {
+        font-family: "Playfair Display", serif;
+        font-size: clamp(2.8rem, 7vw, 5rem);
+        font-weight: 700;
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        margin-bottom: 28px;
+        color: var(--ink);
+      }
+      .hero h1 em {
+        font-style: italic;
+        color: var(--gold);
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        font-weight: 300;
+        color: var(--ink-soft);
+        line-height: 1.7;
+        max-width: 520px;
+        margin: 0 auto 48px;
+      }
+
+      .hero-cta {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ink);
+        color: var(--cream);
+        border: none;
+        border-radius: 100px;
+        padding: 16px 32px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          background 0.2s,
+          transform 0.15s;
+      }
+      .btn-primary:hover {
+        background: var(--ink-soft);
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        color: var(--ink);
+        border: 1.5px solid var(--border);
+        border-radius: 100px;
+        padding: 16px 32px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          border-color 0.2s,
+          background 0.2s,
+          transform 0.15s;
+      }
+      .btn-secondary:hover {
+        border-color: var(--ink);
+        background: var(--paper);
+        transform: translateY(-2px);
+      }
+
+      /* ── STATS BAND ── */
+      .stats-band {
+        display: flex;
+        justify-content: center;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        background: var(--paper);
+      }
+
+      .stat {
+        flex: 1;
+        max-width: 240px;
+        padding: 32px 24px;
+        text-align: center;
+        border-right: 1px solid var(--border);
+      }
+      .stat:last-child {
+        border-right: none;
+      }
+
+      .stat-number {
+        font-family: "Playfair Display", serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--ink);
+        display: block;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        font-weight: 400;
+        color: var(--ink-soft);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        display: block;
+        margin-top: 4px;
+      }
+
+      /* ── INVOICES SECTION ── */
+      .invoices-section {
+        padding: 80px 48px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 40px;
+      }
+
+      .section-title {
+        font-family: "Playfair Display", serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--ink);
+      }
+      .section-title span {
+        font-size: 0.9rem;
+        font-family: "DM Sans", sans-serif;
+        font-weight: 400;
+        color: var(--ink-soft);
+        display: block;
+        margin-top: 4px;
+      }
+
+      .btn-generate {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--gold);
+        color: var(--ink);
+        border: none;
+        border-radius: 100px;
+        padding: 14px 28px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.15s,
+          box-shadow 0.2s;
+        box-shadow: 0 4px 20px rgba(201, 168, 76, 0.3);
+      }
+      .btn-generate:hover {
+        background: #b8963c;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 28px rgba(201, 168, 76, 0.4);
+      }
+
+      .invoice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+      }
+
+      .invoice-card {
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        animation: cardIn 0.4s ease both;
         cursor: pointer;
       }
-
-      button:hover {
-        background: #45a049;
+      .invoice-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(26, 23, 20, 0.1);
       }
 
-      .hidden {
-        display: none;
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
-      .message {
+      .invoice-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .invoice-icon {
+        width: 44px;
+        height: 44px;
+        background: var(--cream);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .invoice-status {
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 4px 12px;
+        border-radius: 100px;
+        letter-spacing: 0.04em;
+      }
+      .status-paid {
+        background: #d4edda;
+        color: #2e7d52;
+      }
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .invoice-amount {
+        font-family: "Playfair Display", serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+      .invoice-amount span {
+        font-size: 1.1rem;
+        font-weight: 400;
+      }
+
+      .invoice-id {
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+        font-weight: 400;
+        margin-bottom: 20px;
+      }
+
+      .invoice-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+      }
+
+      .invoice-date {
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+      }
+
+      .invoice-action {
+        font-size: 0.8rem;
+        color: var(--gold);
+        font-weight: 500;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-family: "DM Sans", sans-serif;
+        transition: color 0.15s;
+        text-decoration: none;
+      }
+      .invoice-action:hover {
+        color: var(--ink);
+      }
+
+      .empty-state {
         text-align: center;
-        margin-top: 10px;
+        padding: 80px 24px;
+        grid-column: 1 / -1;
+      }
+      .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        opacity: 0.4;
+      }
+      .empty-state h3 {
+        font-family: "Playfair Display", serif;
+        font-size: 1.4rem;
+        margin-bottom: 8px;
+        color: var(--ink-soft);
+      }
+      .empty-state p {
+        font-size: 0.9rem;
+        color: var(--ink-soft);
+        opacity: 0.7;
       }
 
-      ul {
-        padding: 0;
-        list-style: none;
+      /* ── MODAL ── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(26, 23, 20, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease;
+      }
+      .modal-overlay.open {
+        display: flex;
       }
 
-      li {
-        background: #eee;
-        padding: 10px;
-        margin: 5px 0;
-        border-radius: 5px;
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .modal {
+        background: var(--paper);
+        border-radius: 24px;
+        padding: 40px;
+        width: 100%;
+        max-width: 440px;
+        position: relative;
+        animation: slideUp 0.3s ease;
+        margin: 24px;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--ink-soft);
+        transition: background 0.15s;
+      }
+      .modal-close:hover {
+        background: var(--border);
+      }
+
+      .modal h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .modal-sub {
+        font-size: 0.875rem;
+        color: var(--ink-soft);
+        margin-bottom: 32px;
+      }
+
+      .modal-tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--cream);
+        border-radius: 100px;
+        padding: 4px;
+        margin-bottom: 28px;
+      }
+      .modal-tab {
+        flex: 1;
+        padding: 9px;
+        border-radius: 100px;
+        border: none;
+        background: transparent;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        color: var(--ink-soft);
+        transition: all 0.2s;
+      }
+      .modal-tab.active {
+        background: var(--paper);
+        color: var(--ink);
+        box-shadow: 0 2px 8px rgba(26, 23, 20, 0.1);
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--ink-soft);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .form-input {
+        width: 100%;
+        padding: 13px 16px;
+        background: var(--cream);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        color: var(--ink);
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .form-input:focus {
+        border-color: var(--gold);
+      }
+
+      .form-submit {
+        width: 100%;
+        padding: 14px;
+        background: var(--ink);
+        color: var(--cream);
+        border: none;
+        border-radius: 12px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 8px;
+        transition:
+          background 0.2s,
+          transform 0.15s;
+      }
+      .form-submit:hover {
+        background: var(--ink-soft);
+        transform: translateY(-1px);
+      }
+
+      .form-feedback {
+        font-size: 0.85rem;
+        color: var(--rust);
+        text-align: center;
+        margin-top: 12px;
+        min-height: 20px;
+      }
+      .form-feedback.success {
+        color: #2e7d52;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        background: var(--ink);
+        color: var(--cream);
+        padding: 60px 48px 32px;
+        margin-top: 80px;
+      }
+
+      .footer-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 48px;
+        padding-bottom: 48px;
+        border-bottom: 1px solid rgba(245, 240, 232, 0.15);
+      }
+
+      .footer-brand .logo {
+        color: var(--cream);
+      }
+      .footer-brand .logo span {
+        color: var(--gold);
+      }
+      .footer-brand p {
+        font-size: 0.875rem;
+        color: rgba(245, 240, 232, 0.6);
+        line-height: 1.7;
+        margin-top: 16px;
+        max-width: 280px;
+      }
+
+      .footer-col h4 {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(245, 240, 232, 0.5);
+        margin-bottom: 20px;
+      }
+      .footer-col a {
+        display: block;
+        font-size: 0.875rem;
+        color: rgba(245, 240, 232, 0.75);
+        text-decoration: none;
+        margin-bottom: 12px;
+        transition: color 0.15s;
+      }
+      .footer-col a:hover {
+        color: var(--cream);
+      }
+
+      .footer-bottom {
+        max-width: 1200px;
+        margin: 28px auto 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: rgba(245, 240, 232, 0.4);
+      }
+
+      .footer-bottom-links {
+        display: flex;
+        gap: 24px;
+      }
+      .footer-bottom-links a {
+        color: rgba(245, 240, 232, 0.4);
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+      .footer-bottom-links a:hover {
+        color: rgba(245, 240, 232, 0.8);
+      }
+
+      /* ── TOAST ── */
+      .toast {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        background: var(--ink);
+        color: var(--cream);
+        padding: 14px 22px;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        box-shadow: 0 8px 32px rgba(26, 23, 20, 0.2);
+        z-index: 999;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+      .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      @media (max-width: 768px) {
+        header {
+          padding: 0 20px;
+        }
+        nav {
+          display: none;
+        }
+        .hero {
+          padding: 100px 24px 60px;
+        }
+        .invoices-section {
+          padding: 60px 24px;
+        }
+        .footer-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+        }
+        .stats-band {
+          flex-wrap: wrap;
+        }
+        .section-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 16px;
+        }
+        footer {
+          padding: 48px 24px 24px;
+        }
+        .footer-bottom {
+          flex-direction: column;
+          gap: 16px;
+          text-align: center;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h2>Inscription</h2>
-      <form id="registerForm">
-        <input type="email" placeholder="Email" name="email" required />
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          name="password"
-          required
-        />
-        <button>S'inscrire</button>
-      </form>
-
-      <h2>Connexion</h2>
-      <form id="loginForm">
-        <input type="email" placeholder="Email" name="email" required />
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          name="password"
-          required
-        />
-        <button>Se connecter</button>
-      </form>
-
-      <div id="app" class="hidden">
-        <h2>Créer une facture</h2>
-        <form id="invoiceForm">
-          <input type="number" name="montant" placeholder="Montant" required />
-          <button>Créer</button>
-        </form>
-
-        <h2>Mes factures</h2>
-        <button id="loadInvoices">Voir mes factures</button>
-        <ul id="invoiceList"></ul>
-
-        <button id="logout">Se déconnecter</button>
+    <!-- HEADER -->
+    <header>
+      <a href="/" class="logo">Fac<span>tura</span></a>
+      <nav>
+        <a href="#fonctionnalites">Fonctionnalités</a>
+        <a href="#tarifs">Tarifs</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div style="position: relative">
+        <button class="user-btn" id="userBtn">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <span id="userBtnLabel">Mon compte</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M3 5l4 4 4-4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <div class="dropdown" id="userDropdown"></div>
       </div>
+    </header>
 
-      <div class="message" id="message"></div>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-content" id="heroContent"></div>
+    </section>
+
+    <!-- STATS -->
+    <div class="stats-band" id="statsSection" style="display: none">
+      <div class="stat">
+        <span class="stat-number" id="statCount">0</span>
+        <span class="stat-label">Factures émises</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" id="statTotal">0 €</span>
+        <span class="stat-label">Montant total</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">∞</span>
+        <span class="stat-label">Stockage inclus</span>
+      </div>
     </div>
 
-    <script>
-      const message = document.getElementById("message");
-      const appDiv = document.getElementById("app");
-      const registerForm = document.getElementById("registerForm");
-      const loginForm = document.getElementById("loginForm");
-      const invoiceForm = document.getElementById("invoiceForm");
-      const loadInvoices = document.getElementById("loadInvoices");
-      const logout = document.getElementById("logout");
-      const invoiceList = document.getElementById("invoiceList");
+    <!-- INVOICES -->
+    <section
+      class="invoices-section"
+      id="invoicesSection"
+      style="display: none"
+    >
+      <div class="section-header">
+        <div class="section-title">
+          Mes factures
+          <span>Retrouvez l'ensemble de vos documents</span>
+        </div>
+        <button class="btn-generate" id="btnGenerateInvoice">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 3v10M3 8h10"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          Générer une facture
+        </button>
+      </div>
+      <div class="invoice-grid" id="invoiceGrid"></div>
+    </section>
 
-      function showMessage(text) {
-        message.textContent = text;
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">Fac<span>tura</span></a>
+          <p>
+            La solution élégante pour créer, gérer et partager vos factures
+            professionnelles. Simple, rapide, sécurisé.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Produit</h4>
+          <a href="#">Fonctionnalités</a>
+          <a href="#">Tarifs</a>
+          <a href="#">Nouveautés</a>
+          <a href="#">Roadmap</a>
+        </div>
+        <div class="footer-col">
+          <h4>Ressources</h4>
+          <a href="#">Documentation</a>
+          <a href="#">API</a>
+          <a href="#">Modèles</a>
+          <a href="#">Blog</a>
+        </div>
+        <div class="footer-col">
+          <h4>Entreprise</h4>
+          <a href="#">À propos</a>
+          <a href="#">Presse</a>
+          <a href="#">Partenaires</a>
+          <a href="#" id="contact">Contact</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 Factura. Tous droits réservés.</span>
+        <div class="footer-bottom-links">
+          <a href="#">Mentions légales</a>
+          <a href="#">Politique de confidentialité</a>
+          <a href="#">CGU</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="authModal">
+      <div class="modal">
+        <button class="modal-close" id="authModalClose">✕</button>
+        <h2 id="authModalTitle">Bienvenue</h2>
+        <p class="modal-sub" id="authModalSub">
+          Connectez-vous pour accéder à vos factures.
+        </p>
+        <div class="modal-tabs">
+          <button
+            class="modal-tab active"
+            id="tabLogin"
+            onclick="switchTab('login')"
+          >
+            Se connecter
+          </button>
+          <button
+            class="modal-tab"
+            id="tabRegister"
+            onclick="switchTab('register')"
+          >
+            S'inscrire
+          </button>
+        </div>
+        <div id="loginForm">
+          <div class="form-group">
+            <label class="form-label">Adresse e-mail</label>
+            <input
+              class="form-input"
+              type="email"
+              id="loginEmail"
+              placeholder="vous@exemple.com"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mot de passe</label>
+            <input
+              class="form-input"
+              type="password"
+              id="loginPassword"
+              placeholder="••••••••"
+            />
+          </div>
+          <button class="form-submit" onclick="doLogin()">Se connecter</button>
+          <div class="form-feedback" id="loginFeedback"></div>
+        </div>
+        <div id="registerForm" style="display: none">
+          <div class="form-group">
+            <label class="form-label">Adresse e-mail</label>
+            <input
+              class="form-input"
+              type="email"
+              id="regEmail"
+              placeholder="vous@exemple.com"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mot de passe</label>
+            <input
+              class="form-input"
+              type="password"
+              id="regPassword"
+              placeholder="Minimum 6 caractères"
+            />
+          </div>
+          <button class="form-submit" onclick="doRegister()">
+            Créer mon compte
+          </button>
+          <div class="form-feedback" id="registerFeedback"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICE CREATE MODAL -->
+    <div class="modal-overlay" id="invoiceModal">
+      <div class="modal">
+        <button class="modal-close" id="invoiceModalClose">✕</button>
+        <h2>Nouvelle facture</h2>
+        <p class="modal-sub">
+          Renseignez le montant pour générer votre facture.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Montant (€)</label>
+          <input
+            class="form-input"
+            type="number"
+            id="invoiceAmount"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+          />
+        </div>
+        <button class="form-submit" onclick="doCreateInvoice()">
+          Générer la facture
+        </button>
+        <div class="form-feedback" id="invoiceFeedback"></div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+      let currentUser = null;
+      let invoices = [];
+
+      function init() {
+        renderHero();
+        renderHeader();
+        checkSession();
       }
 
-      // REGISTER
-      registerForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+      async function checkSession() {
+        const res = await fetch("/my-invoices", { credentials: "include" });
+        if (res.ok) {
+          const data = await res.json();
+          const email = localStorage.getItem("factura_email");
+          if (email) {
+            currentUser = { email };
+            onLogin(email, data);
+          }
+        }
+      }
 
-        const data = {
-          email: registerForm.email.value,
-          password: registerForm.password.value,
-        };
+      function renderHero() {
+        const hero = document.getElementById("heroContent");
+        if (currentUser) {
+          const name = currentUser.email.split("@")[0];
+          hero.innerHTML = `
+          <div class="hero-eyebrow">Espace personnel</div>
+          <h1>Bienvenue,<br><em>${name}</em></h1>
+          <p>Retrouvez toutes vos factures ci-dessous, ou créez-en une nouvelle en quelques secondes.</p>
+          <div class="hero-cta">
+            <button class="btn-primary" onclick="openInvoiceModal()">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Générer une facture
+            </button>
+          </div>`;
+        } else {
+          hero.innerHTML = `
+          <div class="hero-eyebrow">Gestion de factures professionnelle</div>
+          <h1>Vos factures,<br><em>sans effort.</em></h1>
+          <p>Créez, gérez et partagez vos factures professionnelles en quelques secondes. Tout ce dont vous avez besoin, réuni en un seul endroit.</p>
+          <div class="hero-cta">
+            <button class="btn-primary" onclick="openAuth('register')">Commencer gratuitement</button>
+            <button class="btn-secondary" onclick="openAuth('login')">Se connecter</button>
+          </div>`;
+        }
+      }
 
-        const res = await fetch("/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-        const text = await res.text();
-        showMessage(text);
+      function renderHeader() {
+        const avatar = document.getElementById("userAvatar");
+        const label = document.getElementById("userBtnLabel");
+        const dropdown = document.getElementById("userDropdown");
+
+        if (currentUser) {
+          avatar.textContent = currentUser.email[0].toUpperCase();
+          label.textContent = currentUser.email.split("@")[0];
+          dropdown.innerHTML = `
+          <div class="dropdown-item" style="color:var(--ink-soft);font-size:0.8rem;cursor:default;">${currentUser.email}</div>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" onclick="openInvoiceModal()">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2.5v10M2.5 7.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Nouvelle facture
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item danger" onclick="doLogout()">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M10 5l3 3-3 3M13 8H5.5M8 3H3v9h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Se déconnecter
+          </button>`;
+        } else {
+          avatar.textContent = "?";
+          label.textContent = "Mon compte";
+          dropdown.innerHTML = `
+          <button class="dropdown-item" onclick="openAuth('login')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 13c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Se connecter
+          </button>
+          <button class="dropdown-item" onclick="openAuth('register')">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M10 7.5h3M11.5 6v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 13c0-2.76 2.01-5 4.5-5s4.5 2.24 4.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            S'inscrire
+          </button>`;
+        }
+      }
+
+      document.getElementById("userBtn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        document.getElementById("userDropdown").classList.toggle("open");
       });
 
-      // LOGIN
-      loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+      document.addEventListener("click", () =>
+        document.getElementById("userDropdown").classList.remove("open"),
+      );
 
-        const data = {
-          email: loginForm.email.value,
-          password: loginForm.password.value,
-        };
+      function openAuth(tab = "login") {
+        document.getElementById("authModal").classList.add("open");
+        document.getElementById("userDropdown").classList.remove("open");
+        switchTab(tab);
+      }
+
+      function closeAuth() {
+        document.getElementById("authModal").classList.remove("open");
+      }
+
+      document
+        .getElementById("authModalClose")
+        .addEventListener("click", closeAuth);
+      document.getElementById("authModal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeAuth();
+      });
+
+      function switchTab(tab) {
+        const isLogin = tab === "login";
+        document.getElementById("loginForm").style.display = isLogin
+          ? "block"
+          : "none";
+        document.getElementById("registerForm").style.display = isLogin
+          ? "none"
+          : "block";
+        document.getElementById("tabLogin").classList.toggle("active", isLogin);
+        document
+          .getElementById("tabRegister")
+          .classList.toggle("active", !isLogin);
+        document.getElementById("authModalTitle").textContent = isLogin
+          ? "Bienvenue"
+          : "Créer un compte";
+        document.getElementById("authModalSub").textContent = isLogin
+          ? "Connectez-vous pour accéder à vos factures."
+          : "Rejoignez Factura et gérez vos documents facilement.";
+      }
+
+      async function doLogin() {
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+        const feedback = document.getElementById("loginFeedback");
+        if (!email || !password) {
+          feedback.textContent = "Veuillez remplir tous les champs.";
+          return;
+        }
+        feedback.textContent = "";
+
+        const formData = new FormData();
+        formData.append("email", email);
+        formData.append("password", password);
 
         const res = await fetch("/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify({ email, password }),
+          credentials: "include",
         });
-
         const text = await res.text();
-        showMessage(text);
 
         if (text.includes("Connecté")) {
-          appDiv.classList.remove("hidden");
+          localStorage.setItem("factura_email", email);
+          currentUser = { email };
+          closeAuth();
+          onLogin(email, null);
+          showToast("Connexion réussie 👋");
+        } else {
+          feedback.textContent =
+            text === "Utilisateur introuvable"
+              ? "Aucun compte avec cet email."
+              : "Mot de passe incorrect.";
         }
-      });
+      }
 
-      // CREATE INVOICE
-      invoiceForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+      async function doRegister() {
+        const email = document.getElementById("regEmail").value;
+        const password = document.getElementById("regPassword").value;
+        const feedback = document.getElementById("registerFeedback");
+        if (!email || !password) {
+          feedback.textContent = "Veuillez remplir tous les champs.";
+          return;
+        }
+        if (password.length < 6) {
+          feedback.textContent = "Mot de passe trop court (6 caractères min).";
+          return;
+        }
+        feedback.textContent = "";
+
+        await fetch("/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        feedback.className = "form-feedback success";
+        feedback.textContent = "Compte créé ! Connectez-vous.";
+        setTimeout(() => switchTab("login"), 1200);
+      }
+
+      async function onLogin(email, preloaded) {
+        currentUser = { email };
+        renderHero();
+        renderHeader();
+        if (!preloaded) {
+          const res = await fetch("/my-invoices");
+          if (res.ok) invoices = await res.json();
+        } else {
+          invoices = preloaded;
+        }
+        renderInvoices();
+        document.getElementById("statsSection").style.display = "flex";
+        document.getElementById("invoicesSection").style.display = "block";
+      }
+
+      async function doLogout() {
+        await fetch("/logout", { credentials: "include" });
+        localStorage.removeItem("factura_email");
+        currentUser = null;
+        invoices = [];
+        document.getElementById("statsSection").style.display = "none";
+        document.getElementById("invoicesSection").style.display = "none";
+        renderHero();
+        renderHeader();
+        document.getElementById("userDropdown").classList.remove("open");
+        showToast("Vous êtes déconnecté.");
+      }
+
+      function openInvoiceModal() {
+        document.getElementById("invoiceModal").classList.add("open");
+        document.getElementById("invoiceAmount").value = "";
+        document.getElementById("invoiceFeedback").textContent = "";
+        document.getElementById("userDropdown").classList.remove("open");
+      }
+
+      function closeInvoiceModal() {
+        document.getElementById("invoiceModal").classList.remove("open");
+      }
+
+      document
+        .getElementById("invoiceModalClose")
+        .addEventListener("click", closeInvoiceModal);
+      document.getElementById("invoiceModal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeInvoiceModal();
+      });
+      document
+        .getElementById("btnGenerateInvoice")
+        .addEventListener("click", openInvoiceModal);
+
+      async function doCreateInvoice() {
+        const montant = document.getElementById("invoiceAmount").value;
+        const feedback = document.getElementById("invoiceFeedback");
+
+        if (!montant || parseFloat(montant) <= 0) {
+          feedback.textContent = "Montant invalide.";
+          return;
+        }
+
         const res = await fetch("/invoice", {
           method: "POST",
-          headers: { "Content-Type": "application/json" }, // ← JSON
-          body: JSON.stringify({ montant: invoiceForm.montant.value }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ montant: parseFloat(montant) }),
+          credentials: "include",
         });
+
         const text = await res.text();
-        showMessage(text);
-      });
 
-      // LOAD INVOICES
-      loadInvoices.addEventListener("click", async () => {
-        const res = await fetch("/my-invoices");
-        const data = await res.json();
+        if (text.includes("créée")) {
+          // 🔥 RECHARGER DEPUIS MONGODB
+          const refresh = await fetch("/my-invoices");
+          invoices = await refresh.json();
 
-        invoiceList.innerHTML = "";
+          renderInvoices();
+          closeInvoiceModal();
+          showToast("Facture générée avec succès ✓");
+        } else {
+          feedback.textContent = "Erreur lors de la création.";
+        }
+      }
 
-        data.forEach((inv) => {
-          const li = document.createElement("li");
-          li.textContent = `Facture #${inv.id} - ${inv.montant}€`;
-          invoiceList.appendChild(li);
-        });
-      });
+      function renderInvoices() {
+        const grid = document.getElementById("invoiceGrid");
+        document.getElementById("statCount").textContent = invoices.length;
+        const total = invoices.reduce(
+          (s, inv) => s + parseFloat(inv.montant || 0),
+          0,
+        );
+        document.getElementById("statTotal").textContent = total.toLocaleString(
+          "fr-FR",
+          { style: "currency", currency: "EUR" },
+        );
 
-      // LOGOUT
-      logout.addEventListener("click", async () => {
-        await fetch("/logout");
-        appDiv.classList.add("hidden");
-        showMessage("Déconnecté");
-      });
+        if (invoices.length === 0) {
+          grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗂️</div><h3>Aucune facture pour l'instant</h3><p>Cliquez sur « Générer une facture » pour commencer.</p></div>`;
+          return;
+        }
+
+        grid.innerHTML = invoices
+          .map((inv, i) => {
+            const date = new Date(inv.createdAt);
+            const dateStr = date.toLocaleDateString("fr-FR", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            });
+            const status = i % 3 === 0 ? "pending" : "paid";
+            const statusLabel = status === "paid" ? "Payée" : "En attente";
+            const num = String(inv._id).slice(-6);
+            return `
+          <div class="invoice-card" style="animation-delay:${i * 0.06}s">
+            <div class="invoice-card-header">
+              <div class="invoice-icon">🧾</div>
+              <span class="invoice-status status-${status}">${statusLabel}</span>
+            </div>
+            <div class="invoice-amount">${parseFloat(inv.montant).toLocaleString("fr-FR")}<span> €</span></div>
+            <div class="invoice-id">Facture #${num}</div>
+            <div class="invoice-card-footer">
+              <span class="invoice-date">${dateStr}</span>
+              <a class="invoice-action" href="#">Télécharger →</a>
+            </div>
+          </div>`;
+          })
+          .join("");
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3000);
+      }
+
+      init();
     </script>
   </body>
 </html>

@@ -1,108 +1,119 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
-const path = require('path');
-const multer = require('multer');
-const session = require('express-session');
-const bcrypt = require('bcrypt');
-const fs = require('fs').promises;
+const express = require("express");
+const puppeteer = require("puppeteer");
+const path = require("path");
+const multer = require("multer");
+const session = require("express-session");
+const bcrypt = require("bcrypt");
+const fs = require("fs").promises;
+
+require("dotenv").config();
+const mongoose = require("mongoose");
+const MongoStore = require('connect-mongo').default;
 
 const app = express();
-const PORT = 3000;
-let users = [];
-let invoices = [];
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.use(express.static("public"));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
+// Connexion MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  tls: true,
+  tlsAllowInvalidCertificates: true,
+})
+
+// Schéma Utilisateur
+const userSchema = new mongoose.Schema(
+  {
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+  },
+  { timestamps: true },
+);
+const User = mongoose.model("User", userSchema);
+
+// Schéma Facture
+const invoiceSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    montant: { type: Number, required: true },
+  },
+  { timestamps: true },
+);
+const Invoice = mongoose.model("Invoice", invoiceSchema);
 
 //SESSION UTILISATEUR
 app.use(session({
-  secret: 'secret123',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI
+  }),
+  cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
 }));
 
-app.post('/register', async (req, res) => {
+app.post("/register", async (req, res) => {
   const { email, password } = req.body;
-
-  // hash du mot de passe
+  const existing = await User.findOne({ email });
+  if (existing) return res.status(400).send("Email déjà utilisé");
   const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = {
-    id: Date.now(),
-    email,
-    password: hashedPassword
-  };
-
-  users.push(user);
-
-  res.send('Utilisateur créé');
+  const user = await User.create({ email, password: hashedPassword });
+  res.send("Utilisateur créé");
 });
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-
-  const user = users.find(u => u.email === email);
-
+  const user = await User.findOne({ email });
   if (!user) return res.send('Utilisateur introuvable');
-
   const valid = await bcrypt.compare(password, user.password);
-
   if (!valid) return res.send('Mot de passe incorrect');
-
-  // créer session
-  req.session.userId = user.id;
-
+  req.session.userId = user._id;  // ← _id MongoDB, plus Date.now()
   res.send('Connecté');
 });
 
-app.get('/logout', (req, res) => {
+app.get("/logout", (req, res) => {
   req.session.destroy();
-  res.send('Déconnecté');
+  res.send("Déconnecté");
 });
 
 function isAuth(req, res, next) {
   if (req.session.userId) {
     next();
   } else {
-    res.send('Non autorisé');
+    res.send("Non autorisé");
   }
 }
 
-app.get('/admin', isAuth, (req, res) => {
-  res.send('Zone admin');
+app.get("/admin", isAuth, (req, res) => {
+  res.send("Zone admin");
 });
 
 //FACTURE UTILISATEUR
-app.post('/invoice', isAuth, (req, res) => {
+
+app.post('/invoice', isAuth, async (req, res) => {
   const { montant } = req.body;
-
-  const invoice = {
-    id: Date.now(),
-    userId: req.session.userId,
-    montant
-  };
-
-  invoices.push(invoice);
-
+  await Invoice.create({ userId: req.session.userId, montant });
   res.send('Facture créée');
 });
 
-app.get('/my-invoices', isAuth, (req, res) => {
-  const userInvoices = invoices.filter(
-    inv => inv.userId === req.session.userId
-  );
-
+// GET INVOICES
+app.get('/my-invoices', isAuth, async (req, res) => {
+  const userInvoices = await Invoice.find({ userId: req.session.userId }).sort({ createdAt: -1 });
   res.json(userInvoices);
 });
 
 // Route principale - Afficher le formulaire
-app.get('/', (req, res) => {
-  res.render('index');
+app.get("/", (req, res) => {
+  res.render("index");
 });
 
 /*
@@ -120,8 +131,8 @@ const initDirectories = async () => {
 
 // Initialiser les dossiers et démarrer le serveur
 //initDirectories().then(() => {
-  app.listen(PORT, () => {
-    console.log(`
+app.listen(PORT, () => {
+  console.log(`
 ╔════════════════════════════════════════════════╗
 ║   🧾 GÉNÉRATEUR DE FACTURES PROFESSIONNEL     ║
 ╚════════════════════════════════════════════════╝
@@ -135,5 +146,5 @@ const initDirectories = async () => {
 
 💡 Appuyez sur Ctrl+C pour arrêter le serveur
     `);
-  });
+});
 //});
