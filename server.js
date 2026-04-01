@@ -1,6 +1,7 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const path = require('path');
+const multer = require('multer');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const fs = require('fs').promises;
@@ -14,9 +15,9 @@ let invoices = [];
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-/*app.set('view engine', 'ejs');
+app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-*/
+
 
 //SESSION UTILISATEUR
 app.use(session({
@@ -99,15 +100,12 @@ app.get('/my-invoices', isAuth, (req, res) => {
   res.json(userInvoices);
 });
 
-app.get('/my-invoices', isAuth, (req, res) => {
-  const userInvoices = invoices.filter(
-    inv => inv.userId === req.session.userId
-  );
-
-  res.json(userInvoices);
+// Route principale - Afficher le formulaire
+app.get('/', (req, res) => {
+  res.render('index');
 });
 
-
+/*
 // Créer le dossier uploads s'il n'existe pas
 const initDirectories = async () => {
   const dirs = ['public/uploads', 'generated-invoices'];
@@ -118,15 +116,10 @@ const initDirectories = async () => {
       console.error(`Erreur lors de la création du dossier ${dir}:`, error);
     }
   }
-};
-/*
-// Route principale - Afficher le formulaire
-app.get('/', (req, res) => {
-  res.render('index');
-});*/
+};*/
 
 // Initialiser les dossiers et démarrer le serveur
-initDirectories().then(() => {
+//initDirectories().then(() => {
   app.listen(PORT, () => {
     console.log(`
 ╔════════════════════════════════════════════════╗
@@ -143,4 +136,4 @@ initDirectories().then(() => {
 💡 Appuyez sur Ctrl+C pour arrêter le serveur
     `);
   });
-});
+//});
