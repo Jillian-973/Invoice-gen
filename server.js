@@ -24,7 +24,8 @@ app.set("views", path.join(__dirname, "views"));
 mongoose.connect(process.env.MONGO_URI, {
   tls: true,
   tlsAllowInvalidCertificates: true,
-})
+}).then(() => console.log('✅ MongoDB connecté'))
+  .catch(err => console.error('❌ Erreur MongoDB:', err));
 
 // Schéma Utilisateur
 const userSchema = new mongoose.Schema(
