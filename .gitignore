@@ -1,0 +1,33 @@
+# Dépendances
+node_modules/
+
+# Variables d'environnement
+.env
+.env.local
+.env.*.local
+
+# Fichiers générés
+generated-invoices/
+public/uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Cache
+.npm
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Puppeteer cache
+.local-chromium/
