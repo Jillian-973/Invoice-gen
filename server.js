@@ -611,7 +611,6 @@ app.get("/invoice/:id/download", isAuth, async (req, res) => {
       printBackground: true,
       margin: { top: 0, right: 0, bottom: 0, left: 0 },
     });
-    await browser.close();
 
     // 2. Fusionner avec les justificatifs
     const merged = await PDFDocument.create();
@@ -623,7 +622,7 @@ app.get("/invoice/:id/download", isAuth, async (req, res) => {
 
     // Ajouter chaque justificatif
     for (const justifPath of invoice.justificatifs || []) {
-      const fullPath = path.join(__dirname, "public", justifPath);
+      const fullPath = path.join(__dirname, "public/uploads", justifPath);
       const ext = path.extname(justifPath).toLowerCase();
 //
       try {
@@ -679,6 +678,8 @@ app.get("/invoice/:id/download", isAuth, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(Buffer.from(finalPdfBytes));
+        await browser.close();
+
   } catch (err) {
     console.error("❌ Erreur génération PDF :", err);
     res
