@@ -8,7 +8,7 @@ const nodemailer = require("nodemailer");
 
 require("dotenv").config();
 const mongoose = require("mongoose");
-const MongoStore = require('connect-mongo').default;
+const MongoStore = require("connect-mongo").default;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,62 +19,84 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-mongoose.connect(process.env.MONGO_URI, {
-  tls: true,
-  tlsAllowInvalidCertificates: true,
-}).then(() => console.log('✅ MongoDB connecté'))
-  .catch(err => console.error('❌ Erreur MongoDB:', err));
+mongoose
+  .connect(process.env.MONGO_URI, {
+    tls: true,
+    tlsAllowInvalidCertificates: true,
+  })
+  .then(() => console.log("✅ MongoDB connecté"))
+  .catch((err) => console.error("❌ Erreur MongoDB:", err));
 
 const userSchema = new mongoose.Schema(
-  { email: { type: String, required: true, unique: true }, password: { type: String, required: true } },
-  { timestamps: true }
+  {
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+  },
+  { timestamps: true },
 );
 const User = mongoose.model("User", userSchema);
 
 const ligneDepenseSchema = new mongoose.Schema({
-  dateDepense: String, objetDepense: String, km: Number, peages: Number, autres: Number,
+  dateDepense: String,
+  objetDepense: String,
+  km: Number,
+  peages: Number,
+  autres: Number,
 });
 
-const invoiceSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  nomDemandeur: { type: String, required: true },
-  dateDemande: String, raisonDepense: String, budget: String,
-  lignes: [ligneDepenseSchema],
-  totalFrais: Number,
-  choix: { type: String, enum: ["abandon", "remboursement"] },
-  montantAbandon: Number, iban: String, bic: String,
-  signature: String,
-  justificatifs: [String],
-  emailDestinataire: String,
-}, { timestamps: true });
+const invoiceSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    nomDemandeur: { type: String, required: true },
+    dateDemande: String,
+    raisonDepense: String,
+    budget: String,
+    lignes: [ligneDepenseSchema],
+    totalFrais: Number,
+    choix: { type: String, enum: ["abandon", "remboursement"] },
+    montantAbandon: Number,
+    iban: String,
+    bic: String,
+    signature: String,
+    justificatifs: [String],
+    emailDestinataire: String,
+  },
+  { timestamps: true },
+);
 const Invoice = mongoose.model("Invoice", invoiceSchema);
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-  cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 },
+  }),
+);
 
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    const dir = 'public/uploads';
+    const dir = "public/uploads";
     await fs.mkdir(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + '-' + file.originalname);
-  }
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, unique + "-" + file.originalname);
+  },
 });
 const upload = multer({ storage });
 
 // Nodemailer transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true",
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -90,87 +112,117 @@ app.post("/register", async (req, res) => {
   res.send("Utilisateur créé");
 });
 
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  if (!user) return res.send('Utilisateur introuvable');
+  if (!user) return res.send("Utilisateur introuvable");
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.send('Mot de passe incorrect');
+  if (!valid) return res.send("Mot de passe incorrect");
   req.session.userId = user._id;
-  res.send('Connecté');
+  res.send("Connecté");
 });
 
-app.get("/logout", (req, res) => { req.session.destroy(); res.send("Déconnecté"); });
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.send("Déconnecté");
+});
 
 function isAuth(req, res, next) {
   if (req.session.userId) next();
   else res.status(401).send("Non autorisé");
 }
 
-app.post('/invoice', isAuth, upload.array('justificatifs'), async (req, res) => {
-  try {
-    const {
-      nomDemandeur, dateDemande, raisonDepense, budget,
-      lignes, totalFrais, choix, montantAbandon, iban, bic,
-      signature, emailDestinataire
-    } = req.body;
+app.post(
+  "/invoice",
+  isAuth,
+  upload.array("justificatifs"),
+  async (req, res) => {
+    try {
+      const {
+        nomDemandeur,
+        dateDemande,
+        raisonDepense,
+        budget,
+        lignes,
+        totalFrais,
+        choix,
+        montantAbandon,
+        iban,
+        bic,
+        signature,
+        emailDestinataire,
+      } = req.body;
 
-    const justificatifs = req.files ? req.files.map(f => '/uploads/' + f.filename) : [];
-    const parsedLignes = lignes ? JSON.parse(lignes) : [];
-    const totalNum = parseFloat(totalFrais) || 0;
+      const justificatifs = req.files
+        ? req.files.map((f) => "/uploads/" + f.filename)
+        : [];
+      const parsedLignes = lignes ? JSON.parse(lignes) : [];
+      const totalNum = parseFloat(totalFrais) || 0;
 
-    const invoice = await Invoice.create({
-      userId: req.session.userId, nomDemandeur, dateDemande, raisonDepense, budget,
-      lignes: parsedLignes, totalFrais: totalNum,
-      choix, montantAbandon: montantAbandon ? parseFloat(montantAbandon) : undefined,
-      iban, bic, signature, justificatifs, emailDestinataire,
-    });
+      const invoice = await Invoice.create({
+        userId: req.session.userId,
+        nomDemandeur,
+        dateDemande,
+        raisonDepense,
+        budget,
+        lignes: parsedLignes,
+        totalFrais: totalNum,
+        choix,
+        montantAbandon: montantAbandon ? parseFloat(montantAbandon) : undefined,
+        iban,
+        bic,
+        signature,
+        justificatifs,
+        emailDestinataire,
+      });
 
-    // Envoi du mail si une adresse est fournie
-    if (emailDestinataire && emailDestinataire.trim()) {
-      try {
-        const BAREME = 0.606;
+      // Envoi du mail si une adresse est fournie
+      if (emailDestinataire && emailDestinataire.trim()) {
+        try {
+          const BAREME = 0.606;
 
-        // Construire le tableau HTML des dépenses
-        const lignesHTML = parsedLignes.map(l => {
-          const kmTotal = (parseFloat(l.km) || 0) * BAREME;
-          return `
+          // Construire le tableau HTML des dépenses
+          const lignesHTML = parsedLignes
+            .map((l) => {
+              const kmTotal = (parseFloat(l.km) || 0) * BAREME;
+              return `
             <tr>
-              <td style="padding:8px 12px;border:1px solid #ddd">${l.dateDepense || '—'}</td>
-              <td style="padding:8px 12px;border:1px solid #ddd">${l.objetDepense || '—'}</td>
-              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right">${parseFloat(l.km)||0} km</td>
+              <td style="padding:8px 12px;border:1px solid #ddd">${l.dateDepense || "—"}</td>
+              <td style="padding:8px 12px;border:1px solid #ddd">${l.objetDepense || "—"}</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right">${parseFloat(l.km) || 0} km</td>
               <td style="padding:8px 12px;border:1px solid #ddd;text-align:right">${kmTotal.toFixed(2)} €</td>
-              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right">${parseFloat(l.peages||0).toFixed(2)} €</td>
-              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right">${parseFloat(l.autres||0).toFixed(2)} €</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right">${parseFloat(l.peages || 0).toFixed(2)} €</td>
+              <td style="padding:8px 12px;border:1px solid #ddd;text-align:right">${parseFloat(l.autres || 0).toFixed(2)} €</td>
             </tr>`;
-        }).join('');
+            })
+            .join("");
 
-        let choixHTML = '';
-        if (choix === 'abandon') {
-          const apresImpots = totalNum * (1 - 0.66);
-          choixHTML = `
+          let choixHTML = "";
+          if (choix === "abandon") {
+            const apresImpots = totalNum * (1 - 0.66);
+            choixHTML = `
             <p><strong>Choix :</strong> Don au CST (abandon des frais)</p>
             <p><strong>Montant abandonné :</strong> ${totalNum.toFixed(2)} €</p>
             <p>Après déduction d'impôts (66%), le montant réel dépensé sera de : <strong>${apresImpots.toFixed(2)} €</strong></p>`;
-        } else {
-          choixHTML = `
+          } else {
+            choixHTML = `
             <p><strong>Choix :</strong> Remboursement</p>
             <p><strong>Montant à rembourser :</strong> ${totalNum.toFixed(2)} €</p>
-            ${iban ? `<p><strong>IBAN :</strong> ${iban}</p>` : ''}
-            ${bic ? `<p><strong>BIC :</strong> ${bic}</p>` : ''}`;
-        }
+            ${iban ? `<p><strong>IBAN :</strong> ${iban}</p>` : ""}
+            ${bic ? `<p><strong>BIC :</strong> ${bic}</p>` : ""}`;
+          }
 
-        // Pièces jointes justificatifs
-        const attachments = [];
-        for (const filePath of justificatifs) {
-          const fullPath = path.join(__dirname, 'public', filePath);
-          const filename = path.basename(filePath);
-          try {
-            attachments.push({ filename, path: fullPath });
-          } catch (_) {}
-        }
+          // Pièces jointes justificatifs
+          const attachments = [];
+          for (const filePath of justificatifs) {
+            const fullPath = path.join(__dirname, "public", filePath);
+            const filename = path.basename(filePath);
+            try {
+              attachments.push({ filename, path: fullPath });
+            } catch (_) {}
+          }
 
-        const htmlBody = `
+          const htmlBody = `
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="UTF-8"/><style>
@@ -187,9 +239,9 @@ app.post('/invoice', isAuth, upload.array('justificatifs'), async (req, res) => 
   <h2>Informations du demandeur</h2>
   <table>
     <tr><th>Nom</th><td style="padding:8px 12px;border:1px solid #ddd">${nomDemandeur}</td></tr>
-    <tr><th>Date de la demande</th><td style="padding:8px 12px;border:1px solid #ddd">${dateDemande || '—'}</td></tr>
-    <tr><th>Raison</th><td style="padding:8px 12px;border:1px solid #ddd">${raisonDepense || '—'}</td></tr>
-    <tr><th>Budget</th><td style="padding:8px 12px;border:1px solid #ddd">${budget || '—'}</td></tr>
+    <tr><th>Date de la demande</th><td style="padding:8px 12px;border:1px solid #ddd">${dateDemande || "—"}</td></tr>
+    <tr><th>Raison</th><td style="padding:8px 12px;border:1px solid #ddd">${raisonDepense || "—"}</td></tr>
+    <tr><th>Budget</th><td style="padding:8px 12px;border:1px solid #ddd">${budget || "—"}</td></tr>
   </table>
   <h2>Détail des dépenses</h2>
   <table>
@@ -211,39 +263,48 @@ app.post('/invoice', isAuth, upload.array('justificatifs'), async (req, res) => 
 </body>
 </html>`;
 
-        await transporter.sendMail({
-          from: `"Note de Frais CST" <${process.env.SMTP_USER}>`,
-          to: emailDestinataire.trim(),
-          subject: `Note de frais — ${nomDemandeur} — ${totalNum.toFixed(2)} €`,
-          html: htmlBody,
-          attachments,
-        });
+          await transporter.sendMail({
+            from: `"Note de Frais CST" <${process.env.SMTP_USER}>`,
+            to: emailDestinataire.trim(),
+            subject: `Note de frais — ${nomDemandeur} — ${totalNum.toFixed(2)} €`,
+            html: htmlBody,
+            attachments,
+          });
 
-        console.log(`✉️ Mail envoyé à ${emailDestinataire}`);
-      } catch (mailErr) {
-        console.error('❌ Erreur envoi mail:', mailErr.message);
-        // On ne bloque pas la réponse si le mail échoue
+          console.log(`✉️ Mail envoyé à ${emailDestinataire}`);
+        } catch (mailErr) {
+          console.error("❌ Erreur envoi mail:", mailErr.message);
+          // On ne bloque pas la réponse si le mail échoue
+        }
       }
+
+      res.json({ ok: true, id: invoice._id });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ ok: false, error: err.message });
     }
+  },
+);
 
-    res.json({ ok: true, id: invoice._id });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-app.get('/my-invoices', isAuth, async (req, res) => {
-  const userInvoices = await Invoice.find({ userId: req.session.userId }).sort({ createdAt: -1 });
+app.get("/my-invoices", isAuth, async (req, res) => {
+  const userInvoices = await Invoice.find({ userId: req.session.userId }).sort({
+    createdAt: -1,
+  });
   res.json(userInvoices);
 });
 
-app.delete('/invoice/:id', isAuth, async (req, res) => {
+app.delete("/invoice/:id", isAuth, async (req, res) => {
   try {
-    const invoice = await Invoice.findOne({ _id: req.params.id, userId: req.session.userId });
-    if (!invoice) return res.status(404).json({ ok: false, error: 'Facture introuvable' });
+    const invoice = await Invoice.findOne({
+      _id: req.params.id,
+      userId: req.session.userId,
+    });
+    if (!invoice)
+      return res.status(404).json({ ok: false, error: "Facture introuvable" });
     for (const filePath of invoice.justificatifs || []) {
-      try { await fs.unlink(path.join(__dirname, 'public', filePath)); } catch (_) {}
+      try {
+        await fs.unlink(path.join(__dirname, "public", filePath));
+      } catch (_) {}
     }
     await Invoice.deleteOne({ _id: req.params.id });
     res.json({ ok: true });
@@ -253,35 +314,45 @@ app.delete('/invoice/:id', isAuth, async (req, res) => {
 });
 
 // ── HELPERS GLOBAUX ───────────────────────────────────────────────────────────
-const fmt = (n) => parseFloat(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n) =>
+  parseFloat(n || 0).toLocaleString("fr-FR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 const fmtDate = (d) => {
-  if (!d) return '—';
+  if (!d) return "—";
   const dt = new Date(d);
   if (isNaN(dt)) return d;
-  return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  return dt.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 };
 const BAREME = 0.606;
 
 // ── HELPER : génère le HTML de la note de frais ──────────────────────────────
 function buildInvoiceHTML(invoice) {
-
-  const lignesHTML = (invoice.lignes || []).map((l, i) => {
-    const kmMontant = (parseFloat(l.km) || 0) * BAREME;
-    const ligneTotal = kmMontant + (parseFloat(l.peages) || 0) + (parseFloat(l.autres) || 0);
-    return `
-      <tr class="${i % 2 === 0 ? 'row-even' : 'row-odd'}">
+  const lignesHTML = (invoice.lignes || [])
+    .map((l, i) => {
+      const kmMontant = (parseFloat(l.km) || 0) * BAREME;
+      const ligneTotal =
+        kmMontant + (parseFloat(l.peages) || 0) + (parseFloat(l.autres) || 0);
+      return `
+      <tr class="${i % 2 === 0 ? "row-even" : "row-odd"}">
         <td>${fmtDate(l.dateDepense)}</td>
-        <td>${l.objetDepense || '—'}</td>
+        <td>${l.objetDepense || "—"}</td>
         <td class="num">${parseFloat(l.km) || 0} km</td>
         <td class="num">${fmt(kmMontant)} €</td>
         <td class="num">${fmt(l.peages)} €</td>
         <td class="num">${fmt(l.autres)} €</td>
         <td class="num total-cell">${fmt(ligneTotal)} €</td>
       </tr>`;
-  }).join('');
+    })
+    .join("");
 
-  let choixHTML = '';
-  if (invoice.choix === 'abandon') {
+  let choixHTML = "";
+  if (invoice.choix === "abandon") {
     const apresImpots = (invoice.totalFrais || 0) * (1 - 0.66);
     choixHTML = `
       <div class="choix-block abandon-block">
@@ -295,21 +366,22 @@ function buildInvoiceHTML(invoice) {
           <tr class="highlight-row"><td>Après déduction d'impôts (66%), montant réel dépensé</td><td class="num"><strong>${fmt(apresImpots)} €</strong></td></tr>
         </table>
       </div>`;
-  } else if (invoice.choix === 'remboursement') {
+  } else if (invoice.choix === "remboursement") {
     choixHTML = `
       <div class="choix-block remboursement-block">
         <div class="choix-title">Remboursement</div>
         <table class="recap-table">
           <tr><td>Montant à rembourser</td><td class="num"><strong>${fmt(invoice.totalFrais)} €</strong></td></tr>
-          ${invoice.iban ? `<tr><td>IBAN</td><td class="mono">${invoice.iban}</td></tr>` : ''}
-          ${invoice.bic ? `<tr><td>BIC</td><td class="mono">${invoice.bic}</td></tr>` : ''}
+          ${invoice.iban ? `<tr><td>IBAN</td><td class="mono">${invoice.iban}</td></tr>` : ""}
+          ${invoice.bic ? `<tr><td>BIC</td><td class="mono">${invoice.bic}</td></tr>` : ""}
         </table>
       </div>`;
   }
 
-  const justificatifsHTML = (invoice.justificatifs || []).length > 0
-    ? `<ul class="justif-list">${invoice.justificatifs.map(j => `<li>${j.split('/').pop()}</li>`).join('')}</ul>`
-    : '<p class="empty-note">Aucun justificatif joint.</p>';
+  const justificatifsHTML =
+    (invoice.justificatifs || []).length > 0
+      ? `<ul class="justif-list">${invoice.justificatifs.map((j) => `<li>${j.split("/").pop()}</li>`).join("")}</ul>`
+      : '<p class="empty-note">Aucun justificatif joint.</p>';
 
   const sigHTML = invoice.signature
     ? `<img src="${invoice.signature}" alt="Signature" class="sig-img"/>`
@@ -318,10 +390,31 @@ function buildInvoiceHTML(invoice) {
   const refNum = String(invoice._id).slice(-6).toUpperCase();
   const dateCreation = fmtDate(invoice.createdAt);
 
-  return { html: buildDocHTML({ lignesHTML, choixHTML, justificatifsHTML, sigHTML, refNum, dateCreation, invoice, fmt }), refNum };
+  return {
+    html: buildDocHTML({
+      lignesHTML,
+      choixHTML,
+      justificatifsHTML,
+      sigHTML,
+      refNum,
+      dateCreation,
+      invoice,
+      fmt,
+    }),
+    refNum,
+  };
 }
 
-function buildDocHTML({ lignesHTML, choixHTML, justificatifsHTML, sigHTML, refNum, dateCreation, invoice, fmt }) {
+function buildDocHTML({
+  lignesHTML,
+  choixHTML,
+  justificatifsHTML,
+  sigHTML,
+  refNum,
+  dateCreation,
+  invoice,
+  fmt,
+}) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -420,10 +513,10 @@ function buildDocHTML({ lignesHTML, choixHTML, justificatifsHTML, sigHTML, refNu
   <div class="section">
     <div class="section-title">Informations du demandeur</div>
     <div class="info-grid">
-      <div class="info-cell"><div class="info-label">Nom du demandeur</div><div class="info-value">${invoice.nomDemandeur || '—'}</div></div>
+      <div class="info-cell"><div class="info-label">Nom du demandeur</div><div class="info-value">${invoice.nomDemandeur || "—"}</div></div>
       <div class="info-cell"><div class="info-label">Date de la demande</div><div class="info-value">${fmtDate(invoice.dateDemande)}</div></div>
-      <div class="info-cell"><div class="info-label">Raison de la dépense</div><div class="info-value">${invoice.raisonDepense || '—'}</div></div>
-      <div class="info-cell"><div class="info-label">Budget concerné</div><div class="info-value">${invoice.budget ? `<span class="badge">${invoice.budget}</span>` : '—'}</div></div>
+      <div class="info-cell"><div class="info-label">Raison de la dépense</div><div class="info-value">${invoice.raisonDepense || "—"}</div></div>
+      <div class="info-cell"><div class="info-label">Budget concerné</div><div class="info-value">${invoice.budget ? `<span class="badge">${invoice.budget}</span>` : "—"}</div></div>
     </div>
   </div>
   <div class="section">
@@ -455,7 +548,7 @@ function buildDocHTML({ lignesHTML, choixHTML, justificatifsHTML, sigHTML, refNu
 </div>
 <div class="doc-footer">
   <span>CST — Club Spéléo Troglos &nbsp;|&nbsp; <strong>tresorier@troglos.fr</strong></span>
-  <span>Référence : <strong>#${refNum}</strong> &nbsp;|&nbsp; Généré le ${new Date().toLocaleDateString('fr-FR')}</span>
+  <span>Référence : <strong>#${refNum}</strong> &nbsp;|&nbsp; Généré le ${new Date().toLocaleDateString("fr-FR")}</span>
 </div>
 </body>
 </html>`;
@@ -463,41 +556,61 @@ function buildDocHTML({ lignesHTML, choixHTML, justificatifsHTML, sigHTML, refNu
 
 // Utilitaire : lit un fichier image et retourne son data URL base64
 async function imageToDataURL(filePath) {
-  const ext = path.extname(filePath).toLowerCase().replace('.', '');
-  const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic', bmp: 'image/bmp' };
-  const mime = mimeMap[ext] || 'image/jpeg';
+  const ext = path.extname(filePath).toLowerCase().replace(".", "");
+  const mimeMap = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    heic: "image/heic",
+    bmp: "image/bmp",
+  };
+  const mime = mimeMap[ext] || "image/jpeg";
   const buf = await fs.readFile(filePath);
-  return `data:${mime};base64,${buf.toString('base64')}`;
+  return `data:${mime};base64,${buf.toString("base64")}`;
 }
 
 // PREVIEW HTML A4
-app.get('/invoice/:id/preview', isAuth, async (req, res) => {
+app.get("/invoice/:id/preview", isAuth, async (req, res) => {
   try {
-    const invoice = await Invoice.findOne({ _id: req.params.id, userId: req.session.userId });
-    if (!invoice) return res.status(404).send('Facture introuvable');
+    const invoice = await Invoice.findOne({
+      _id: req.params.id,
+      userId: req.session.userId,
+    });
+    if (!invoice) return res.status(404).send("Facture introuvable");
     const { html } = buildInvoiceHTML(invoice);
     res.send(html);
   } catch (err) {
-    res.status(500).send('Erreur : ' + err.message);
+    res.status(500).send("Erreur : " + err.message);
   }
 });
 
 // TÉLÉCHARGEMENT PDF COMPLET (note de frais + justificatifs)
-app.get('/invoice/:id/download', isAuth, async (req, res) => {
+app.get("/invoice/:id/download", isAuth, async (req, res) => {
   try {
-    const invoice = await Invoice.findOne({ _id: req.params.id, userId: req.session.userId });
-    if (!invoice) return res.status(404).send('Facture introuvable');
+    const invoice = await Invoice.findOne({
+      _id: req.params.id,
+      userId: req.session.userId,
+    });
+    if (!invoice) return res.status(404).send("Facture introuvable");
 
-    const puppeteer = require('puppeteer');
-    const { PDFDocument } = require('pdf-lib');
+    const puppeteer = require("puppeteer");
+    const { PDFDocument } = require("pdf-lib");
 
     const { html, refNum } = buildInvoiceHTML(invoice);
 
     // 1. Générer le PDF de la note de frais via Puppeteer
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const mainPdfBytes = await page.pdf({ format: 'A4', printBackground: true, margin: { top: 0, right: 0, bottom: 0, left: 0 } });
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    const mainPdfBytes = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
     await browser.close();
 
     // 2. Fusionner avec les justificatifs
@@ -506,21 +619,25 @@ app.get('/invoice/:id/download', isAuth, async (req, res) => {
     // Ajouter les pages de la note de frais
     const mainDoc = await PDFDocument.load(mainPdfBytes);
     const mainPages = await merged.copyPages(mainDoc, mainDoc.getPageIndices());
-    mainPages.forEach(p => merged.addPage(p));
+    mainPages.forEach((p) => merged.addPage(p));
 
     // Ajouter chaque justificatif
     for (const justifPath of invoice.justificatifs || []) {
-      const fullPath = path.join(__dirname, 'public', justifPath);
+      const fullPath = path.join(__dirname, "public", justifPath);
       const ext = path.extname(justifPath).toLowerCase();
 
       try {
-        if (ext === '.pdf') {
+        if (ext === ".pdf") {
           // Justificatif PDF : copier ses pages directement
           const justifBytes = await fs.readFile(fullPath);
-          const justifDoc = await PDFDocument.load(justifBytes, { ignoreEncryption: true });
-          const pages = await merged.copyPages(justifDoc, justifDoc.getPageIndices());
-          pages.forEach(p => merged.addPage(p));
-
+          const justifDoc = await PDFDocument.load(justifBytes, {
+            ignoreEncryption: true,
+          });
+          const pages = await merged.copyPages(
+            justifDoc,
+            justifDoc.getPageIndices(),
+          );
+          pages.forEach((p) => merged.addPage(p));
         } else {
           // Justificatif image : l'intégrer dans une page A4
           const imgBytes = await fs.readFile(fullPath);
@@ -530,7 +647,7 @@ app.get('/invoice/:id/download', isAuth, async (req, res) => {
           const margin = 40;
 
           let embeddedImg;
-          if (ext === '.png') {
+          if (ext === ".png") {
             embeddedImg = await merged.embedPng(imgBytes);
           } else {
             // jpg, jpeg, webp, heic, bmp → tenter jpg
@@ -549,28 +666,33 @@ app.get('/invoice/:id/download', isAuth, async (req, res) => {
           imgPage.drawImage(embeddedImg, { x, y, width: dw, height: dh });
         }
       } catch (justifErr) {
-        console.warn(`⚠️ Justificatif ignoré (${justifPath}) :`, justifErr.message);
+        console.warn(
+          `⚠️ Justificatif ignoré (${justifPath}) :`,
+          justifErr.message,
+        );
       }
     }
 
     const finalPdfBytes = await merged.save();
-    const filename = `note-de-frais-${refNum}-${invoice.nomDemandeur.replace(/\s+/g, '-')}.pdf`;
+    const filename = `note-de-frais-${refNum}-${invoice.nomDemandeur.replace(/\s+/g, "-")}.pdf`;
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(Buffer.from(finalPdfBytes));
-
   } catch (err) {
-    console.error('❌ Erreur génération PDF :', err);
-    res.status(500).send('Erreur lors de la génération du PDF : ' + err.message);
+    console.error("❌ Erreur génération PDF :", err);
+    res
+      .status(500)
+      .send("Erreur lors de la génération du PDF : " + err.message);
   }
 });
 
-
-app.get("/", (req, res) => { res.render("index"); });
+app.get("/", (req, res) => {
+  res.render("index");
+});
 
 app.listen(PORT, () => {
- console.log(`
+  console.log(`
 ╔════════════════════════════════════════════════╗
 ║   🧾 GÉNÉRATEUR DE NOTE DE FRAIS TROGLOS     ║
 ╚════════════════════════════════════════════════╝
@@ -580,6 +702,7 @@ app.listen(PORT, () => {
 📁 Dossier factures: ./generated-invoices/
 
 💡 Appuyez sur Ctrl+C pour arrêter le serveur
-    `);});
+    `);
+});
 
-    //test export
+//test export
