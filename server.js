@@ -625,7 +625,7 @@ app.get("/invoice/:id/download", isAuth, async (req, res) => {
     for (const justifPath of invoice.justificatifs || []) {
       const fullPath = path.join(__dirname, "public", justifPath);
       const ext = path.extname(justifPath).toLowerCase();
-
+//
       try {
         if (ext === ".pdf") {
           // Justificatif PDF : copier ses pages directement
